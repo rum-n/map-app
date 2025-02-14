@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { Platform } from 'react-native';
 
 export interface Location {
   id: string;
@@ -25,10 +26,25 @@ const initialState: PinsState = {
   lastFetched: null,
 };
 
-export const fetchPins = createAsyncThunk('pins/fetchPins', async () => {
-  const response = await fetch('http://localhost:3000/pins');
-  const data = await response.json();
-  return data;
+const BASE_URL = Platform.select({
+  ios: 'http://localhost:3000',
+  android: 'http://10.0.2.2:3000',
+});
+
+export const fetchPins = createAsyncThunk('pins/fetchPins', async (_, { rejectWithValue }) => {
+  try {
+    const response = await fetch(`${BASE_URL}/pins`);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return rejectWithValue(errorText);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    return rejectWithValue('Network error');
+  }
 });
 
 const pinsSlice = createSlice({
@@ -52,7 +68,7 @@ const pinsSlice = createSlice({
       })
       .addCase(fetchPins.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || 'Failed to fetch pins';
+        state.error = action.payload as string;
       });
   },
 });

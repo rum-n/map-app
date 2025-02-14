@@ -19,11 +19,16 @@ const PinDetailsSheet: React.FC<PinDetailsSheetProps> = ({ location, bottomSheet
       enablePanDownToClose>
       <View style={styles.container}>
         <Text style={styles.title}>{location.title}</Text>
-        <Text style={styles.coordinates}>
-          Latitude: {location.latitude}
-          {'\n'}
-          Longitude: {location.longitude}
-        </Text>
+        <View style={styles.coordinatesContainer}>
+          <View style={styles.coordinateRow}>
+            <Text style={styles.coordinateLabel}>Latitude:</Text>
+            <Text style={styles.coordinateValue}>{location.latitude.toFixed(6)}°</Text>
+          </View>
+          <View style={styles.coordinateRow}>
+            <Text style={styles.coordinateLabel}>Longitude:</Text>
+            <Text style={styles.coordinateValue}>{location.longitude.toFixed(6)}°</Text>
+          </View>
+        </View>
         <Text style={styles.sectionTitle}>Connectors:</Text>
         {location.connectors.map((connector, index) => (
           <View key={index} style={styles.connectorItem}>
@@ -55,9 +60,26 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 8,
   },
-  coordinates: {
-    fontSize: 16,
+  coordinatesContainer: {
     marginBottom: 16,
+    backgroundColor: '#F5F5F5',
+    padding: 12,
+    borderRadius: 8,
+  },
+  coordinateRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  coordinateLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#666',
+  },
+  coordinateValue: {
+    fontSize: 16,
+    fontFamily: 'monospace',
   },
   sectionTitle: {
     fontSize: 18,
