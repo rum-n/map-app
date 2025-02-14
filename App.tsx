@@ -1,118 +1,76 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
 import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { TouchableOpacity } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import MapScreen from './src/screens/MapScreen';
+import FilterDrawer from './src/components/FilterDrawer';
+import SettingsScreen from './src/screens/SettingsScreen';
+import { Provider } from 'react-redux';
+import { store } from './src/redux/store';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+export type DrawerParamList = {
+  Map: undefined;
+  Settings: undefined;
+  Filters: undefined;
+};
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+const LeftDrawer = createDrawerNavigator<DrawerParamList>();
+const RightDrawer = createDrawerNavigator<DrawerParamList>();
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+const Map = () => {
   return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
-
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
-
-  return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
+    <LeftDrawer.Navigator>
+      <LeftDrawer.Screen
+        name="Map"
+        component={MapScreen}
+        options={({ navigation }: any) => ({
+          title: 'Map',
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={() => navigation.getParent()?.openDrawer()}
+              style={{ marginRight: 15 }}>
+              <Icon name="filter-list" size={24} color="#000" />
+            </TouchableOpacity>
+          ),
+        })}
       />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+      <LeftDrawer.Screen name="Settings" component={SettingsScreen} />
+    </LeftDrawer.Navigator>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
+const RightDrawerNavigator = () => {
+  return (
+    <RightDrawer.Navigator
+      screenOptions={{
+        drawerPosition: 'right',
+        headerShown: false,
+      }}>
+      <RightDrawer.Screen name="Map" component={Map} />
+      <RightDrawer.Screen
+        name="Filters"
+        component={FilterDrawer}
+        options={{
+          drawerPosition: 'right',
+          headerShown: true,
+        }}
+      />
+    </RightDrawer.Navigator>
+  );
+};
+
+const App = () => {
+  return (
+    <Provider store={store}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <NavigationContainer>
+          <RightDrawerNavigator />
+        </NavigationContainer>
+      </GestureHandlerRootView>
+    </Provider>
+  );
+};
 
 export default App;
