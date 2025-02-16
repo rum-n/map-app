@@ -143,8 +143,8 @@ const MapScreen = () => {
             latitudeDelta: 1.5,
             longitudeDelta: 1.5,
           }}>
-          {filteredLocations && filteredLocations.length > 0 && filteredLocations.map(location => {
-            if (!location?.latitude || !location?.longitude) {
+          {filteredLocations?.map(location => {
+            if (!location?._id || !location?.latitude || !location?.longitude) {
               return null;
             }
 
@@ -172,9 +172,11 @@ const MapScreen = () => {
                       Connectors:
                     </Text>
                     {location.connectors?.map((connector, index) => (
-                      <Text key={index} style={styles.calloutText}>
-                        {connector.type}: {connector.status}
-                      </Text>
+                      connector && (
+                        <Text key={`${location._id}-${index}`} style={styles.calloutText}>
+                          {connector.type || 'Unknown'}: {connector.status || 'Unknown'}
+                        </Text>
+                      )
                     ))}
                   </View>
                 </Callout>

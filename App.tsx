@@ -30,8 +30,12 @@ const Map = () => {
           headerRight: () => (
             <TouchableOpacity
               onPress={() => navigation.getParent()?.openDrawer()}
-              style={{ marginRight: 15 }}>
-              <Icon name="filter-list" size={24} color="#000" />
+              style={{
+                marginRight: 15,
+                padding: 8,
+                borderRadius: 20,
+              }}>
+              <Icon name="filter" size={24} color="#007AFF" />
             </TouchableOpacity>
           ),
         })}
