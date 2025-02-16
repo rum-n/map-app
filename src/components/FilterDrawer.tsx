@@ -14,7 +14,7 @@ import type { RootState } from '../redux/store';
 type ConnectorType = 'J1772' | 'Type2' | 'CCS 2' | 'Type 3';
 type ConnectorStatus = 'available' | 'unavailable';
 
-const FilterDrawer = ({ navigation }: any) => {
+const FilterDrawer = ({ navigation }: any) => { // TODO: fix type!!!
   const filters = useSelector((state: RootState) => state.filters);
   const dispatch = useDispatch();
 

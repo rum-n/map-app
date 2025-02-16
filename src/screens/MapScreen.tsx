@@ -1,12 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, Text, Animated } from 'react-native';
-import MapView, { Marker, Region } from 'react-native-maps';
+import MapView, { Marker, Region, Callout } from 'react-native-maps';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
 import { fetchPins, Location } from '../redux/slices/pinsSlice';
-import PinDetailsSheet from '../components/PinDetailsSheet';
-import BottomSheet from '@gorhom/bottom-sheet';
 import { Platform } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const BASE_URL = Platform.select({
   ios: 'http://localhost:3000',
@@ -21,7 +20,6 @@ const MapScreen = () => {
   const [visibleRegion, setVisibleRegion] = useState<Region>();
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [isOnline, setIsOnline] = useState(true);
-  const bottomSheetRef = useRef<BottomSheet>(null);
   const [bannerOpacity] = useState(new Animated.Value(0));
 
   useEffect(() => {
@@ -54,7 +52,7 @@ const MapScreen = () => {
       controller.abort();
       clearInterval(intervalId);
     };
-  }, [dispatch, isOnline]);
+  }, [dispatch, isOnline, pinStyle]);
 
   useEffect(() => {
     if (!isOnline) {
@@ -74,11 +72,6 @@ const MapScreen = () => {
     }
   }, [isOnline, bannerOpacity]);
 
-  const handleMarkerPress = (location: Location) => {
-    setSelectedLocation(location);
-    bottomSheetRef.current?.snapToIndex(0);
-  };
-
   const getPinColor = (style: string): string => {
     switch (style) {
       case 'custom1':
@@ -92,7 +85,15 @@ const MapScreen = () => {
     }
   };
 
+  const getPinDescription = (location: Location) => {
+    return "Latitude: " + location.latitude + "\n\nLongitude: " + location.longitude;
+  };
+
   const filteredLocations = locations.filter(location => {
+    if (!location || !location.latitude || !location.longitude) {
+      return false;
+    }
+
     // First check if location is within visible bounds
     if (visibleRegion) {
       const isWithinBounds =
@@ -120,54 +121,71 @@ const MapScreen = () => {
   });
 
   return (
-    <View style={styles.container}>
-      <Animated.View
-        style={[
-          styles.banner,
-          {
-            opacity: bannerOpacity,
-            transform: [
-              {
-                translateY: bannerOpacity.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [-50, 0],
-                }),
-              },
-            ],
-          },
-        ]}>
-        <Text style={styles.bannerText}>
-          You are currently offline. The information may be outdated.
-        </Text>
-      </Animated.View>
-      <MapView
-        style={styles.map}
-        onRegionChangeComplete={(region) => {
-          setVisibleRegion(region);
-        }}
-        initialRegion={{
-          latitude: 42.6977,
-          longitude: 23.3219,
-          latitudeDelta: 1.5,
-          longitudeDelta: 1.5,
-        }}>
-        {filteredLocations.map(location => {
-          return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={styles.container}>
+        <Animated.View
+          style={[
+            styles.banner,
+            {
+              opacity: bannerOpacity,
+              transform: [
+                {
+                  translateY: bannerOpacity.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-50, 0],
+                  }),
+                },
+              ],
+            },
+          ]}>
+          <Text style={styles.bannerText}>
+            You are currently offline. The information may be outdated.
+          </Text>
+        </Animated.View>
+        <MapView
+          style={styles.map}
+          onRegionChangeComplete={setVisibleRegion}
+          initialRegion={{
+            latitude: 42.6977,
+            longitude: 23.3219,
+            latitudeDelta: 1.5,
+            longitudeDelta: 1.5,
+          }}>
+          {filteredLocations && filteredLocations.length > 0 && filteredLocations.map(location => (
             <Marker
-              key={location.id}
+              key={location._id}
               coordinate={{
-                latitude: location.latitude,
-                longitude: location.longitude,
+                latitude: location.latitude || 0,
+                longitude: location.longitude || 0,
               }}
-              title={location.title}
-              onPress={() => handleMarkerPress(location)}
               pinColor={getPinColor(pinStyle)}
-            />
-          );
-        })}
-      </MapView>
-      <PinDetailsSheet location={selectedLocation} bottomSheetRef={bottomSheetRef} />
-    </View>
+            >
+              <Callout tooltip style={styles.customCallout}>
+                <View style={styles.calloutContainer}>
+                  <Text style={styles.calloutTitle}>
+                    {location.title || 'N/A'}
+                  </Text>
+                  <Text style={styles.calloutText}>
+                    Latitude: {location.latitude.toFixed(2) || 'N/A'}
+                  </Text>
+                  <Text style={styles.calloutText}>
+                    Longitude: {location.longitude.toFixed(2) || 'N/A'}
+                  </Text>
+                  <Text style={styles.calloutText}>
+                    Connectors:
+                  </Text>
+                  {location.connectors && location.connectors.length > 0 && location.connectors.map((connector, index) => (
+                    <Text key={index} style={styles.calloutText}>
+                      {connector.type}: {connector.status}
+                    </Text>
+                  ))}
+                </View>
+              </Callout>
+            </Marker>
+          ))}
+        </MapView>
+      </View>
+    </GestureHandlerRootView>
   );
 };
 
@@ -183,14 +201,33 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#f44336',
+    backgroundColor: '#FF9800',
     padding: 10,
     zIndex: 1000,
   },
   bannerText: {
     color: 'white',
     textAlign: 'center',
+  },
+  calloutContainer: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 10,
+    width: 150,
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
+  calloutTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  calloutText: {
     fontSize: 14,
+    marginVertical: 5,
+  },
+  customCallout: {
+    width: 150,
+    height: 100,
   },
 });
 

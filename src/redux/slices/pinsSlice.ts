@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Platform } from 'react-native';
 
 export interface Location {
-  id: string;
+  _id: string;
   title: string;
   latitude: number;
   longitude: number;
