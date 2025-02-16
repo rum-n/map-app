@@ -1,9 +1,9 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, Text, Animated } from 'react-native';
 import MapView, { Marker, Region, Callout } from 'react-native-maps';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
-import { fetchPins, Location } from '../redux/slices/pinsSlice';
+import { fetchPins } from '../redux/slices/pinsSlice';
 import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -14,11 +14,10 @@ const BASE_URL = Platform.select({
 
 const MapScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { locations, loading, error } = useSelector((state: RootState) => state.pins);
+  const { locations } = useSelector((state: RootState) => state.pins);
   const filters = useSelector((state: RootState) => state.filters);
   const pinStyle = useSelector((state: RootState) => state.settings.pinStyle);
   const [visibleRegion, setVisibleRegion] = useState<Region>();
-  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [isOnline, setIsOnline] = useState(true);
   const [bannerOpacity] = useState(new Animated.Value(0));
 
@@ -45,7 +44,6 @@ const MapScreen = () => {
 
     dispatch(fetchPins());
 
-    // Set up polling interval
     const intervalId = setInterval(checkConnectivity, 30000);
 
     return () => {
@@ -85,16 +83,11 @@ const MapScreen = () => {
     }
   };
 
-  const getPinDescription = (location: Location) => {
-    return "Latitude: " + location.latitude + "\n\nLongitude: " + location.longitude;
-  };
-
   const filteredLocations = locations.filter(location => {
     if (!location || !location.latitude || !location.longitude) {
       return false;
     }
 
-    // First check if location is within visible bounds
     if (visibleRegion) {
       const isWithinBounds =
         location.latitude <= visibleRegion.latitude + visibleRegion.latitudeDelta / 2 &&
@@ -105,7 +98,6 @@ const MapScreen = () => {
       if (!isWithinBounds) return false;
     }
 
-    // Then apply connector filters
     const anyTypeSelected = Object.values(filters.types).some(value => value);
     const anyStatusSelected = Object.values(filters.statuses).some(value => value);
 
@@ -122,7 +114,7 @@ const MapScreen = () => {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <View style={styles.container}>
+      <View style={styles.container} testID="map-container">
         <Animated.View
           style={[
             styles.banner,

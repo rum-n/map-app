@@ -37,6 +37,7 @@ const SettingsScreen = () => {
       <View style={styles.styleContainer}>
         {PIN_STYLES.map((style) => (
           <TouchableOpacity
+            testID="style-option"
             key={style}
             style={[styles.styleOption]}
             onPress={() => handleStyleSelect(style)}>
