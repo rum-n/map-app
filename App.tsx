@@ -25,7 +25,6 @@ const Map = () => {
         name="Map"
         component={MapScreen}
         options={({ navigation }: any) => ({
-          title: 'Map',
           headerRight: () => (
             <TouchableOpacity
               onPress={() => navigation.getParent()?.openDrawer()}

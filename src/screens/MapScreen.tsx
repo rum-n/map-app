@@ -1,15 +1,48 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, memo } from 'react';
 import { View, StyleSheet, Text, Animated } from 'react-native';
 import MapView, { Marker, Region, Callout } from 'react-native-maps';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
-import { fetchPins } from '../redux/slices/pinsSlice';
+import { fetchPins, Location } from '../redux/slices/pinsSlice';
 import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { debounce } from 'lodash';
 
 const BASE_URL = Platform.select({
   ios: 'http://localhost:3000',
   android: 'http://10.0.2.2:3000',
+});
+
+const MarkerCallout = memo(({ location }: { location: Location }) => {
+  if (!location || typeof location !== 'object') return null;
+  if (typeof location.latitude !== 'number' || typeof location.longitude !== 'number') return null;
+
+  return (
+    <Callout tooltip>
+      <View style={styles.calloutContainer}>
+        <Text style={styles.calloutTitle}>{location.title || 'N/A'}</Text>
+        <Text style={styles.calloutText}>
+          Latitude: {Number(location.latitude).toFixed(2) || 'N/A'}
+        </Text>
+        <Text style={styles.calloutText}>
+          Longitude: {Number(location.longitude).toFixed(2) || 'N/A'}
+        </Text>
+        <Text style={styles.calloutText}>Connectors:</Text>
+        {Array.isArray(location.connectors) && location.connectors
+          .filter(connector => (
+            connector &&
+            typeof connector === 'object' &&
+            typeof connector.type === 'string' &&
+            typeof connector.status === 'string'
+          ))
+          .map((connector, index) => (
+            <Text key={`${location._id}-${index}`} style={styles.calloutText}>
+              {connector.type || 'Unknown'}: {connector.status || 'Unknown'}
+            </Text>
+          ))}
+      </View>
+    </Callout>
+  );
 });
 
 const MapScreen = () => {
@@ -21,10 +54,8 @@ const MapScreen = () => {
   const [isOnline, setIsOnline] = useState(true);
   const [bannerOpacity] = useState(new Animated.Value(0));
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    const checkConnectivity = async () => {
+  const debouncedCheckConnectivity = useCallback(
+    debounce(async (controller: AbortController) => {
       try {
         const response = await fetch(`${BASE_URL}/ping`, {
           signal: controller.signal,
@@ -35,22 +66,32 @@ const MapScreen = () => {
           dispatch(fetchPins());
         }
       } catch (error) {
-        console.error('Connectivity check error:', error);
         if (!controller.signal.aborted) {
           setIsOnline(false);
         }
       }
-    };
+    }, 1000),
+    [isOnline]
+  );
+
+  useEffect(() => {
+    const controller = new AbortController();
 
     dispatch(fetchPins());
 
-    const intervalId = setInterval(checkConnectivity, 60000);
+    // Initial connectivity check
+    debouncedCheckConnectivity(controller);
+
+    // Set up interval for periodic checks
+    const intervalId = setInterval(() => {
+      debouncedCheckConnectivity(controller);
+    }, 60000);
 
     return () => {
       controller.abort();
       clearInterval(intervalId);
     };
-  }, [dispatch, isOnline, pinStyle]);
+  }, [dispatch, debouncedCheckConnectivity, pinStyle]);
 
   useEffect(() => {
     if (!isOnline) {
@@ -151,39 +192,27 @@ const MapScreen = () => {
             latitudeDelta: 1.5,
             longitudeDelta: 1.5,
           }}>
-          {filteredLocations.map(location => (
-            <Marker
-              key={location._id}
-              coordinate={{
-                latitude: location.latitude,
-                longitude: location.longitude,
-              }}
-              pinColor={getPinColor(pinStyle)}>
-              <Callout tooltip style={styles.customCallout}>
-                <View style={styles.calloutContainer}>
-                  <Text style={styles.calloutTitle}>
-                    {location.title || 'N/A'}
-                  </Text>
-                  <Text style={styles.calloutText}>
-                    Latitude: {location.latitude.toFixed(2)}
-                  </Text>
-                  <Text style={styles.calloutText}>
-                    Longitude: {location.longitude.toFixed(2)}
-                  </Text>
-                  <Text style={styles.calloutText}>
-                    Connectors:
-                  </Text>
-                  {(location.connectors || [])
-                    .filter(connector => connector?.type || connector?.status)
-                    .map((connector, index) => (
-                      <Text key={`${location._id}-${index}`} style={styles.calloutText}>
-                        {connector.type || 'Unknown'}: {connector.status || 'Unknown'}
-                      </Text>
-                    ))}
-                </View>
-              </Callout>
-            </Marker>
-          ))}
+          {filteredLocations
+            .filter(location => (
+              location &&
+              typeof location === 'object' &&
+              typeof location._id === 'string' &&
+              typeof location.latitude === 'number' &&
+              typeof location.longitude === 'number' &&
+              !isNaN(location.latitude) &&
+              !isNaN(location.longitude)
+            ))
+            .map(location => (
+              <Marker
+                key={location._id}
+                coordinate={{
+                  latitude: Number(location.latitude),
+                  longitude: Number(location.longitude),
+                }}
+                pinColor={getPinColor(pinStyle)}>
+                <MarkerCallout location={location} />
+              </Marker>
+            ))}
         </MapView>
       </View>
     </GestureHandlerRootView>
