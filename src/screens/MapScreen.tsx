@@ -151,38 +151,44 @@ const MapScreen = () => {
             latitudeDelta: 1.5,
             longitudeDelta: 1.5,
           }}>
-          {filteredLocations && filteredLocations.length > 0 && filteredLocations.map(location => (
-            <Marker
-              key={location._id}
-              coordinate={{
-                latitude: location.latitude || 0,
-                longitude: location.longitude || 0,
-              }}
-              pinColor={getPinColor(pinStyle)}
-            >
-              <Callout tooltip style={styles.customCallout}>
-                <View style={styles.calloutContainer}>
-                  <Text style={styles.calloutTitle}>
-                    {location.title || 'N/A'}
-                  </Text>
-                  <Text style={styles.calloutText}>
-                    Latitude: {location.latitude.toFixed(2) || 'N/A'}
-                  </Text>
-                  <Text style={styles.calloutText}>
-                    Longitude: {location.longitude.toFixed(2) || 'N/A'}
-                  </Text>
-                  <Text style={styles.calloutText}>
-                    Connectors:
-                  </Text>
-                  {location.connectors && location.connectors.length > 0 && location.connectors.map((connector, index) => (
-                    <Text key={index} style={styles.calloutText}>
-                      {connector.type}: {connector.status}
+          {filteredLocations && filteredLocations.length > 0 && filteredLocations.map(location => {
+            if (!location?.latitude || !location?.longitude) {
+              return null;
+            }
+
+            return (
+              <Marker
+                key={location._id}
+                coordinate={{
+                  latitude: location.latitude,
+                  longitude: location.longitude,
+                }}
+                pinColor={getPinColor(pinStyle)}
+              >
+                <Callout tooltip style={styles.customCallout}>
+                  <View style={styles.calloutContainer}>
+                    <Text style={styles.calloutTitle}>
+                      {location.title || 'N/A'}
                     </Text>
-                  ))}
-                </View>
-              </Callout>
-            </Marker>
-          ))}
+                    <Text style={styles.calloutText}>
+                      Latitude: {location.latitude.toFixed(2)}
+                    </Text>
+                    <Text style={styles.calloutText}>
+                      Longitude: {location.longitude.toFixed(2)}
+                    </Text>
+                    <Text style={styles.calloutText}>
+                      Connectors:
+                    </Text>
+                    {location.connectors?.map((connector, index) => (
+                      <Text key={index} style={styles.calloutText}>
+                        {connector.type}: {connector.status}
+                      </Text>
+                    ))}
+                  </View>
+                </Callout>
+              </Marker>
+            );
+          })}
         </MapView>
       </View>
     </GestureHandlerRootView>
