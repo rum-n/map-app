@@ -44,7 +44,7 @@ const MapScreen = () => {
 
     dispatch(fetchPins());
 
-    const intervalId = setInterval(checkConnectivity, 30000);
+    const intervalId = setInterval(checkConnectivity, 60000);
 
     return () => {
       controller.abort();
@@ -83,34 +83,39 @@ const MapScreen = () => {
     }
   };
 
-  const filteredLocations = locations.filter(location => {
-    if (!location || !location.latitude || !location.longitude) {
-      return false;
-    }
+  const filteredLocations = locations
+    .filter(location => {
+      // Basic validation
+      if (!location?._id || !location?.latitude || !location?.longitude) {
+        return false;
+      }
 
-    if (visibleRegion) {
-      const isWithinBounds =
-        location.latitude <= visibleRegion.latitude + visibleRegion.latitudeDelta / 2 &&
-        location.latitude >= visibleRegion.latitude - visibleRegion.latitudeDelta / 2 &&
-        location.longitude <= visibleRegion.longitude + visibleRegion.longitudeDelta / 2 &&
-        location.longitude >= visibleRegion.longitude - visibleRegion.longitudeDelta / 2;
+      // Region bounds check
+      if (visibleRegion) {
+        const isWithinBounds =
+          location.latitude <= visibleRegion.latitude + visibleRegion.latitudeDelta / 2 &&
+          location.latitude >= visibleRegion.latitude - visibleRegion.latitudeDelta / 2 &&
+          location.longitude <= visibleRegion.longitude + visibleRegion.longitudeDelta / 2 &&
+          location.longitude >= visibleRegion.longitude - visibleRegion.longitudeDelta / 2;
 
-      if (!isWithinBounds) return false;
-    }
+        if (!isWithinBounds) return false;
+      }
 
-    const anyTypeSelected = Object.values(filters.types).some(value => value);
-    const anyStatusSelected = Object.values(filters.statuses).some(value => value);
+      // Filter check
+      const anyTypeSelected = Object.values(filters.types).some(value => value);
+      const anyStatusSelected = Object.values(filters.statuses).some(value => value);
 
-    if (!anyTypeSelected && !anyStatusSelected) {
-      return true;
-    }
+      if (!anyTypeSelected && !anyStatusSelected) {
+        return true;
+      }
 
-    return location.connectors.some(
-      connector =>
-        (!anyTypeSelected || filters.types[connector.type]) &&
-        (!anyStatusSelected || filters.statuses[connector.status])
-    );
-  });
+      return location.connectors?.some(
+        connector =>
+          connector &&
+          (!anyTypeSelected || filters.types[connector.type]) &&
+          (!anyStatusSelected || filters.statuses[connector.status])
+      ) ?? false;
+    });
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -143,46 +148,39 @@ const MapScreen = () => {
             latitudeDelta: 1.5,
             longitudeDelta: 1.5,
           }}>
-          {filteredLocations?.map(location => {
-            if (!location?._id || !location?.latitude || !location?.longitude) {
-              return null;
-            }
-
-            return (
-              <Marker
-                key={location._id}
-                coordinate={{
-                  latitude: location.latitude,
-                  longitude: location.longitude,
-                }}
-                pinColor={getPinColor(pinStyle)}
-              >
-                <Callout tooltip style={styles.customCallout}>
-                  <View style={styles.calloutContainer}>
-                    <Text style={styles.calloutTitle}>
-                      {location.title || 'N/A'}
-                    </Text>
-                    <Text style={styles.calloutText}>
-                      Latitude: {location.latitude.toFixed(2)}
-                    </Text>
-                    <Text style={styles.calloutText}>
-                      Longitude: {location.longitude.toFixed(2)}
-                    </Text>
-                    <Text style={styles.calloutText}>
-                      Connectors:
-                    </Text>
-                    {location.connectors?.map((connector, index) => (
-                      connector && (
-                        <Text key={`${location._id}-${index}`} style={styles.calloutText}>
-                          {connector.type || 'Unknown'}: {connector.status || 'Unknown'}
-                        </Text>
-                      )
+          {filteredLocations.map(location => (
+            <Marker
+              key={location._id}
+              coordinate={{
+                latitude: location.latitude,
+                longitude: location.longitude,
+              }}
+              pinColor={getPinColor(pinStyle)}>
+              <Callout tooltip style={styles.customCallout}>
+                <View style={styles.calloutContainer}>
+                  <Text style={styles.calloutTitle}>
+                    {location.title || 'N/A'}
+                  </Text>
+                  <Text style={styles.calloutText}>
+                    Latitude: {location.latitude.toFixed(2)}
+                  </Text>
+                  <Text style={styles.calloutText}>
+                    Longitude: {location.longitude.toFixed(2)}
+                  </Text>
+                  <Text style={styles.calloutText}>
+                    Connectors:
+                  </Text>
+                  {(location.connectors || [])
+                    .filter(connector => connector?.type || connector?.status)
+                    .map((connector, index) => (
+                      <Text key={`${location._id}-${index}`} style={styles.calloutText}>
+                        {connector.type || 'Unknown'}: {connector.status || 'Unknown'}
+                      </Text>
                     ))}
-                  </View>
-                </Callout>
-              </Marker>
-            );
-          })}
+                </View>
+              </Callout>
+            </Marker>
+          ))}
         </MapView>
       </View>
     </GestureHandlerRootView>

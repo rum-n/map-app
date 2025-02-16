@@ -13,7 +13,6 @@ import { store } from './src/redux/store';
 export type DrawerParamList = {
   Map: undefined;
   Settings: undefined;
-  Filters: undefined;
 };
 
 const LeftDrawer = createDrawerNavigator<DrawerParamList>();
@@ -51,16 +50,9 @@ const RightDrawerNavigator = () => {
       screenOptions={{
         drawerPosition: 'right',
         headerShown: false,
-      }}>
+      }}
+      drawerContent={(props) => <FilterDrawer {...props} />}>
       <RightDrawer.Screen name="Map" component={Map} />
-      <RightDrawer.Screen
-        name="Filters"
-        component={FilterDrawer}
-        options={{
-          drawerPosition: 'right',
-          headerShown: true,
-        }}
-      />
     </RightDrawer.Navigator>
   );
 };
