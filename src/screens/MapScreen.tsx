@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, StyleSheet, Text, Animated } from 'react-native';
 import MapView, { Marker, Region, Callout } from 'react-native-maps';
 import { useDispatch, useSelector } from 'react-redux';
@@ -83,39 +83,42 @@ const MapScreen = () => {
     }
   };
 
-  const filteredLocations = locations
-    .filter(location => {
-      // Basic validation
-      if (!location?._id || !location?.latitude || !location?.longitude) {
-        return false;
-      }
+  const filteredLocations = useMemo(
+    () =>
+      locations
+        .filter((location) => {
+          if (!location?._id || !location?.latitude || !location?.longitude) {
+            return false;
+          }
 
-      // Region bounds check
-      if (visibleRegion) {
-        const isWithinBounds =
-          location.latitude <= visibleRegion.latitude + visibleRegion.latitudeDelta / 2 &&
-          location.latitude >= visibleRegion.latitude - visibleRegion.latitudeDelta / 2 &&
-          location.longitude <= visibleRegion.longitude + visibleRegion.longitudeDelta / 2 &&
-          location.longitude >= visibleRegion.longitude - visibleRegion.longitudeDelta / 2;
+          // Region bounds check
+          if (visibleRegion) {
+            const isWithinBounds =
+              location.latitude <= visibleRegion.latitude + visibleRegion.latitudeDelta / 2 &&
+              location.latitude >= visibleRegion.latitude - visibleRegion.latitudeDelta / 2 &&
+              location.longitude <= visibleRegion.longitude + visibleRegion.longitudeDelta / 2 &&
+              location.longitude >= visibleRegion.longitude - visibleRegion.longitudeDelta / 2;
 
-        if (!isWithinBounds) return false;
-      }
+            if (!isWithinBounds) return false;
+          }
 
-      // Filter check
-      const anyTypeSelected = Object.values(filters.types).some(value => value);
-      const anyStatusSelected = Object.values(filters.statuses).some(value => value);
+          // Filter check
+          const anyTypeSelected = Object.values(filters.types).some(value => value);
+          const anyStatusSelected = Object.values(filters.statuses).some(value => value);
 
-      if (!anyTypeSelected && !anyStatusSelected) {
-        return true;
-      }
+          if (!anyTypeSelected && !anyStatusSelected) {
+            return true;
+          }
 
-      return location.connectors?.some(
-        connector =>
-          connector &&
-          (!anyTypeSelected || filters.types[connector.type]) &&
-          (!anyStatusSelected || filters.statuses[connector.status])
-      ) ?? false;
-    });
+          return location.connectors?.some(
+            connector =>
+              connector &&
+              (!anyTypeSelected || filters.types[connector.type]) &&
+              (!anyStatusSelected || filters.statuses[connector.status])
+          ) ?? false;
+        }),
+    [locations, visibleRegion, filters.types, filters.statuses]
+  );
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
