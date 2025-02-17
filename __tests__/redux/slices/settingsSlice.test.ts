@@ -1,9 +1,9 @@
 import settingsReducer, { setPinStyle } from "../../../src/redux/slices/settingsSlice";
-
+import { PinStyle } from '../../../src/types/index';
 
 describe('Settings Slice', () => {
   const initialState = {
-    pinStyle: 'default',
+    pinStyle: 'default' as PinStyle,
   };
 
   it('should handle initial state', () => {

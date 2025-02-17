@@ -6,6 +6,7 @@ import MapScreen from '../../src/screens/MapScreen';
 import pinsReducer from '../../src/redux/slices/pinsSlice';
 import filterReducer from '../../src/redux/slices/filterSlice';
 import settingsReducer from '../../src/redux/slices/settingsSlice';
+import { PinStyle } from '../../src/types/index';
 import { Location } from '../../src/types/index';
 
 const mockFetch: jest.Mock = jest.fn(() =>
@@ -122,9 +123,9 @@ describe('MapScreen', () => {
       },
       filters: {
         types: { 'J1772': true, 'Type2': false, 'CCS 2': false, 'Type 3': false },
-        statuses: { 'available': true, 'unavailable': false }
+        statuses: { 'available': true, 'unavailable': false },
       },
-      settings: { pinStyle: 'default' }
+      settings: { pinStyle: 'default' as PinStyle }
     };
 
     mockStore = configureStore({
