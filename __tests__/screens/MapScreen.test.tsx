@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Reducer } from 'react';
 import { render, act } from '@testing-library/react-native';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
@@ -6,22 +6,25 @@ import MapScreen from '../../src/screens/MapScreen';
 import pinsReducer from '../../src/redux/slices/pinsSlice';
 import filterReducer from '../../src/redux/slices/filterSlice';
 import settingsReducer from '../../src/redux/slices/settingsSlice';
+import { Location } from '../../src/types/index';
 
-global.fetch = jest.fn(() =>
+const mockFetch: jest.Mock = jest.fn(() =>
   Promise.resolve({
     ok: true,
-    json: () => Promise.resolve([{
+    json: () => Promise.resolve<Location[]>([{
       _id: '1',
       title: 'Test Location',
       latitude: 42.6977,
       longitude: 23.3219,
       connectors: [{
-        type: 'J1772' as const,
-        status: 'available' as const
+        type: 'J1772',
+        status: 'available'
       }]
     }])
   })
-) as jest.Mock;
+);
+
+global.fetch = mockFetch;
 
 jest.mock('react-native-gesture-handler', () => ({
   GestureHandlerRootView: 'GestureHandlerRootView',
@@ -136,6 +139,7 @@ describe('MapScreen', () => {
           immutableCheck: false,
         }),
       preloadedState: initialState
+
     });
 
     jest.clearAllMocks();

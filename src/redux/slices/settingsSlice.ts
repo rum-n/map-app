@@ -1,7 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { PinStyle } from '../../types';
 
 interface SettingsState {
-  pinStyle: string;
+  pinStyle: PinStyle;
 }
 
 const initialState: SettingsState = {
@@ -12,7 +13,7 @@ const settingsSlice = createSlice({
   name: 'settings',
   initialState,
   reducers: {
-    setPinStyle: (state, action: PayloadAction<string>) => {
+    setPinStyle: (state, action: PayloadAction<PinStyle>) => {
       state.pinStyle = action.payload;
     },
   },

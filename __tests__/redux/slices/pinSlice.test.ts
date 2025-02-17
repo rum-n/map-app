@@ -1,5 +1,5 @@
-import pinsReducer, { setLocations, fetchPins, Location } from '../../../src/redux/slices/pinsSlice';
-
+import pinsReducer, { setLocations, fetchPins } from '../../../src/redux/slices/pinsSlice';
+import { Location } from '../../../src/types/index';
 describe('Pins Slice', () => {
   const initialState = {
     locations: [],

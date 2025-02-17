@@ -3,10 +3,12 @@ import { View, StyleSheet, Text, Animated } from 'react-native';
 import MapView, { Marker, Region, Callout } from 'react-native-maps';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
-import { fetchPins, Location } from '../redux/slices/pinsSlice';
+import { fetchPins } from '../redux/slices/pinsSlice';
 import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { debounce } from 'lodash';
+import { PinStyle } from '../types';
+import { Location } from '../types/index';
 
 const BASE_URL = Platform.select({
   ios: 'http://localhost:3000',
@@ -49,7 +51,7 @@ const MapScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { locations } = useSelector((state: RootState) => state.pins);
   const filters = useSelector((state: RootState) => state.filters);
-  const pinStyle = useSelector((state: RootState) => state.settings.pinStyle);
+  const pinStyle = useSelector((state: RootState): PinStyle => state.settings.pinStyle);
   const [visibleRegion, setVisibleRegion] = useState<Region>();
   const [isOnline, setIsOnline] = useState(true);
   const [bannerOpacity] = useState(new Animated.Value(0));
@@ -111,7 +113,7 @@ const MapScreen = () => {
     }
   }, [isOnline, bannerOpacity]);
 
-  const getPinColor = (style: string): string => {
+  const getPinColor = (style: PinStyle): string => {
     switch (style) {
       case 'custom1':
         return 'blue';

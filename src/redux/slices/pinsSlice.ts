@@ -1,17 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Platform } from 'react-native';
-
-export interface Location {
-  _id: string;
-  title: string;
-  latitude: number;
-  longitude: number;
-  connectors: Array<{
-    type: 'J1772' | 'Type2' | 'CCS 2' | 'Type 3';
-    status: 'available' | 'unavailable';
-  }>;
-}
-
+import { Location } from '../../types/index';
 interface PinsState {
   locations: Location[];
   loading: boolean;
