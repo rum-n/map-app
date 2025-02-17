@@ -12,16 +12,17 @@ import { setPinStyle } from '../redux/slices/settingsSlice';
 import { useNavigation } from '@react-navigation/native';
 import { DrawerParamList } from '../../App';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
+import { PinStyle } from '@/types';
 
 type SettingsScreenNavigationProp = DrawerNavigationProp<DrawerParamList, 'Settings'>;
 
-const PIN_STYLES = ['default', 'custom1', 'custom2', 'custom3'];
+const PIN_STYLES: PinStyle[] = ['default', 'custom1', 'custom2', 'custom3'];
 
 const SettingsScreen = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation<SettingsScreenNavigationProp>();
 
-  const handleStyleSelect = async (style: string) => {
+  const handleStyleSelect = async (style: PinStyle) => {
     try {
       await AsyncStorage.setItem('pinStyle', style);
       dispatch(setPinStyle(style));
@@ -35,7 +36,7 @@ const SettingsScreen = () => {
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Map Pin Style</Text>
       <View style={styles.styleContainer}>
-        {PIN_STYLES.map((style) => (
+        {PIN_STYLES.map((style: PinStyle) => (
           <TouchableOpacity
             testID="style-option"
             key={style}
