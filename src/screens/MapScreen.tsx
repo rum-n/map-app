@@ -93,7 +93,7 @@ const MapScreen = () => {
       controller.abort();
       clearInterval(intervalId);
     };
-  }, [dispatch, debouncedCheckConnectivity, pinStyle]);
+  }, [dispatch, debouncedCheckConnectivity]);
 
   useEffect(() => {
     if (!isOnline) {
@@ -206,7 +206,7 @@ const MapScreen = () => {
             ))
             .map(location => (
               <Marker
-                key={location._id}
+                key={`${location._id}-${pinStyle}`}
                 coordinate={{
                   latitude: Number(location.latitude),
                   longitude: Number(location.longitude),
